@@ -1,0 +1,6 @@
+# Copy to android/key.properties locally and fill with real values.
+# NEVER commit android/key.properties or the keystore.
+storePassword=REPLACE_ME
+keyPassword=REPLACE_ME
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks

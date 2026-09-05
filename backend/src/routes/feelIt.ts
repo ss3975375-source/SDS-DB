@@ -1,0 +1,22 @@
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { z } from 'zod';
+import { requireAuth } from '../middleware/auth.js';
+import { addReply, createFeelIt, deleteFeelIt, getMediaUrl, listFeelIt, listViewers, markViewed, removeReaction, setReaction } from '../services/feelItService.js';
+
+const uuid = z.string().uuid();
+const createSchema = z.object({ text:z.string().trim().max(10000).optional(), attachmentId:uuid.optional(), visibility:z.enum(['contacts','selected','exclude']).default('contacts'), userIds:z.array(uuid).max(500).default([]) }).refine(x=>!!x.text || !!x.attachmentId,{message:'content_required'});
+const reactionSchema=z.object({reaction:z.string().trim().min(1).max(32)});
+const replySchema=z.object({body:z.string().trim().min(1).max(4000)});
+const postParams=z.object({postId:uuid});
+function error(reply:any,e:unknown){const c=e instanceof Error?e.message:'';const map:Record<string,[number,string]>={FORBIDDEN:[403,'Not authorized'],NOT_FOUND:[404,'Feel It post not found'],USER_NOT_FOUND:[404,'User not found'],CONTENT_REQUIRED:[400,'Content required'],TEXT_TOO_LONG:[400,'Text too long'],RECIPIENTS_REQUIRED:[400,'Selected contacts required'],INVALID_RECIPIENTS:[400,'Invalid recipients'],ATTACHMENT_FORBIDDEN:[403,'Attachment not authorized'],INVALID_REACTION:[400,'Invalid reaction'],INVALID_REPLY:[400,'Invalid reply'],NO_ATTACHMENT:[404,'No media attached']};const [s,m]=map[c]??[500,'Feel It operation failed'];if(s===500)reply.request.log.error({err:e},'feel-it operation failed');return reply.code(s).send({error:m});}
+export async function registerFeelItRoutes(app:FastifyInstance){
+  app.post('/api/v1/feel-it',{preHandler:requireAuth},async(req,reply)=>{const b=createSchema.safeParse(req.body);if(!b.success)return reply.code(400).send({error:'Invalid Feel It request'});try{return reply.code(201).send(await createFeelIt(req.auth.userId,b.data));}catch(e){return error(reply,e);}});
+  app.get('/api/v1/feel-it',{preHandler:requireAuth},async(req,reply)=>{try{return reply.send({items:await listFeelIt(req.auth.userId)});}catch(e){return error(reply,e);}});
+  app.post('/api/v1/feel-it/:postId/view',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'Invalid post id'});try{await markViewed(req.auth.userId,p.data.postId);return reply.code(204).send();}catch(e){return error(reply,e);}});
+  app.put('/api/v1/feel-it/:postId/reaction',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params),b=reactionSchema.safeParse(req.body);if(!p.success||!b.success)return reply.code(400).send({error:'Invalid reaction'});try{await setReaction(req.auth.userId,p.data.postId,b.data.reaction);return reply.code(204).send();}catch(e){return error(reply,e);}});
+  app.delete('/api/v1/feel-it/:postId/reaction',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'Invalid post id'});try{await removeReaction(req.auth.userId,p.data.postId);return reply.code(204).send();}catch(e){return error(reply,e);}});
+  app.post('/api/v1/feel-it/:postId/replies',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params),b=replySchema.safeParse(req.body);if(!p.success||!b.success)return reply.code(400).send({error:'Invalid reply'});try{return reply.code(201).send(await addReply(req.auth.userId,p.data.postId,b.data.body));}catch(e){return error(reply,e);}});
+  app.get('/api/v1/feel-it/:postId/viewers',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'Invalid post id'});try{return reply.send({items:await listViewers(req.auth.userId,p.data.postId)});}catch(e){return error(reply,e);}});
+  app.get('/api/v1/feel-it/:postId/media',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'Invalid post id'});try{return reply.send(await getMediaUrl(req.auth.userId,p.data.postId));}catch(e){return error(reply,e);}});
+  app.delete('/api/v1/feel-it/:postId',{preHandler:requireAuth},async(req,reply)=>{const p=postParams.safeParse(req.params);if(!p.success)return reply.code(400).send({error:'Invalid post id'});try{await deleteFeelIt(req.auth.userId,p.data.postId);return reply.code(204).send();}catch(e){return error(reply,e);}});
+}

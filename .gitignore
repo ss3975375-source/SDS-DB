@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.dart_tool/
+build/
+.gradle/
+.idea/
+.vscode/
+node_modules/
+coverage/
+*.jks
+*.keystore
+google-services.json
+key.properties

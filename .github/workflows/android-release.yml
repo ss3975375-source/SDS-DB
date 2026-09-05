@@ -1,0 +1,54 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: Release version name
+        required: true
+        default: 0.28.0
+      build_number:
+        description: Release version code
+        required: true
+        default: "28"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Restore signing files
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_B64"
+          test -n "$ANDROID_KEY_PROPERTIES"
+          test -n "$GOOGLE_SERVICES_JSON"
+          printf '%s' "$ANDROID_KEY_PROPERTIES" > app/android/key.properties
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/android/app/google-services.json
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > app/android/upload-keystore.jks
+      - name: Validate release configuration
+        working-directory: app
+        run: node ../scripts/check-release-config.mjs
+      - name: Build and test
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter build appbundle --release --build-name "${{ inputs.build_name }}" --build-number "${{ inputs.build_number }}" --obfuscate --split-debug-info=../artifacts/symbols
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sds-db-android-release
+          path: |
+            app/build/app/outputs/bundle/release/*.aab
+            artifacts/symbols/**
+          if-no-files-found: error

@@ -1,0 +1,6 @@
+SDS-DB Release Candidate
+Version: 1.0.0+30
+Application ID: com.example.ultimate_privacy
+Signed binary: NOT INCLUDED
+Reason: production signing keys and Firebase configuration are deployment secrets.
+Required controlled-environment gates: Flutter analyze/test, backend test/build, PostgreSQL integration, signed AAB build, device testing.

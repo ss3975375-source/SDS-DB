@@ -1,0 +1,53 @@
+name: SDS-DB CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sdsdb
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: sdsdb_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U sdsdb -d sdsdb_test"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sdsdb:ci-password@localhost:5432/sdsdb_test
+      JWT_SECRET: ci-only-secret-that-is-long-enough
+      CORS_ORIGINS: https://ci.example.invalid
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run security:audit
+      - run: npm test
+
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter analyze
+        working-directory: app
+      - run: flutter test
+        working-directory: app
