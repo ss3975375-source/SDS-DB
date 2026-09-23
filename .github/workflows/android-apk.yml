@@ -21,9 +21,17 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Validate Google Sign-In configuration
+        env:
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          test -n "$GOOGLE_WEB_CLIENT_ID"
+
       - name: Build APK
         working-directory: app
-        run: flutter build apk --debug
+        env:
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+        run: flutter build apk --debug --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
