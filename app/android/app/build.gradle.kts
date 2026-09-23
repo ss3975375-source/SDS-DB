@@ -1,5 +1,8 @@
 import java.io.FileInputStream
 import java.util.Properties
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.kotlin.dsl.configure
 
 plugins {
     id("com.android.application")
@@ -19,7 +22,7 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-android {
+extensions.configure<ApplicationExtension> {
     namespace = "com.example.ultimate_privacy"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -28,7 +31,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = JavaVersion.VERSION_17.toString() }
+    kotlin.compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
 
     defaultConfig {
         applicationId = "com.example.ultimate_privacy"
