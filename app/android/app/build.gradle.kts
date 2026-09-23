@@ -54,7 +54,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
         }
-        getByName("debug") { applicationIdSuffix = ".debug" }
+        getByName("debug") { /* Keep the debug application ID aligned with the registered Google Android OAuth client. */ }
     }
 }
 
