@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   int index = 0;
   @override Widget build(BuildContext context) {
     final pages = [
-      _ChatsSection(onGroups: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => GroupsPage(repository: GroupRepository(widget.api)))),),
+      _ChatsSection(onGroups: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => GroupsPage(repository: GroupRepository(widget.api)))); }),
       const _Section(title: 'Contacts', icon: Icons.people_outline, message: 'Add people by user ID or invitation.'),
       const _Section(title: 'Files', icon: Icons.folder_outlined, message: 'Private files shared with you will appear here.'),
       FeelItPage(repository: FeelItRepository(widget.api)),
