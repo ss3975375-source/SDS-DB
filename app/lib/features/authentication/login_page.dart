@@ -25,6 +25,6 @@ class _LoginPageState extends State<LoginPage> {
         if (error != null) Padding(padding: const EdgeInsets.only(bottom: 16), child: Text(error!, textAlign: TextAlign.center)),
         SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: busy ? null : _login, icon: busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.login), label: Text(busy ? 'Signing in…' : 'Continue with Google'))),
       ],
-    )))),
+    ))))),
   );
 }
