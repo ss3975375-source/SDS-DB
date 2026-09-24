@@ -37,7 +37,13 @@ export async function registerAccountRoutes(app: FastifyInstance) {
     const schema = z.object({reportedUserId:z.string().uuid().optional(),messageId:z.string().uuid().optional(),conversationId:z.string().uuid().optional(),attachmentId:z.string().uuid().optional(),reason:z.string().trim().min(1).max(200),details:z.string().max(4000).optional()});
     const body = schema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({error:'invalid_report'});
-    try { return reply.code(201).send(await createReport(request.auth.userId, body.data)); }
+    const input: {reportedUserId?:string;messageId?:string;conversationId?:string;attachmentId?:string;reason:string;details?:string} = { reason: body.data.reason };
+    if (body.data.reportedUserId !== undefined) input.reportedUserId = body.data.reportedUserId;
+    if (body.data.messageId !== undefined) input.messageId = body.data.messageId;
+    if (body.data.conversationId !== undefined) input.conversationId = body.data.conversationId;
+    if (body.data.attachmentId !== undefined) input.attachmentId = body.data.attachmentId;
+    if (body.data.details !== undefined) input.details = body.data.details;
+    try { return reply.code(201).send(await createReport(request.auth.userId, input)); }
     catch (e) { if (e instanceof Error && ['INVALID_TARGET','REPORT_TARGET_UNAVAILABLE'].includes(e.message)) return reply.code(403).send({error:'report_target_unavailable'}); request.log.error({err:e},'report creation failed'); return reply.code(500).send({error:'Unable to create report'}); }
   });
 
