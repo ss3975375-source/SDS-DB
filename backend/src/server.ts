@@ -56,7 +56,8 @@ export async function buildApp() {
   app.register(messageLifecycleRoutes, { prefix: '/api/v1/message-lifecycle' });
   app.setErrorHandler((error, request, reply) => {
     const message = error instanceof Error ? error.message : '';
-    const authFailure = message === 'UNAUTHENTICATED' || error?.name === 'JWTExpired' || error?.name === 'JWSInvalid' || error?.name === 'JWTClaimValidationFailed';
+    const errorName = error instanceof Error ? error.name : '';
+    const authFailure = message === 'UNAUTHENTICATED' || ['JWTExpired','JWSInvalid','JWTClaimValidationFailed'].includes(errorName);
     if (authFailure) {
       request.log.warn({ event: 'authn_failed', requestId: request.id }, 'authentication failed');
       return reply.code(401).send({ error: 'Authentication required' });
