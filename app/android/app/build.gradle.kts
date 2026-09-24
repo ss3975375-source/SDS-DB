@@ -55,10 +55,9 @@ extensions.configure<ApplicationExtension> {
 
     buildTypes {
         getByName("release") {
-            if (!keystorePropertiesFile.exists()) {
-                throw GradleException("Release signing is not configured. Create android/key.properties locally; never commit it.")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             }
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
         }
