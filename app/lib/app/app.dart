@@ -74,6 +74,8 @@ class _AuthGate extends StatelessWidget {
   Future<String?> _loadUserId() async {
     final token = await auth.store.accessToken();
     if (token == null || token.isEmpty) return null;
+    final cached = await auth.store.userId();
+    if (cached != null && cached.isNotEmpty) return cached;
     final user = await auth.currentUser();
     return user['id'] as String?;
   }
