@@ -30,7 +30,7 @@ export async function requireAuth(request: FastifyRequest): Promise<void> {
   const row = session.rows[0];
   if (!row || row.user_id !== payload.sub || row.deleted_at) throw new Error('UNAUTHENTICATED');
   if (row.deletion_requested_at && !isAllowedDuringAccountDeletion(request.method, request.url)) {
-    throw new Error('UNAUTHENTICATED');
+    throw new Error('ACCOUNT_DELETION_PENDING');
   }
   await pool.query('UPDATE sessions SET last_seen_at = now() WHERE id = $1 AND revoked_at IS NULL', [payload.sid]);
   if (session.rows[0].device_id) await pool.query('UPDATE devices SET last_seen_at = now() WHERE id = $1 AND revoked_at IS NULL', [session.rows[0].device_id]);
