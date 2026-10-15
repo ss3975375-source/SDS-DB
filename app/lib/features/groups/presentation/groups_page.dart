@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../data/group_repository.dart';
 import '../domain/group.dart';
+import '../../chats/chat_page.dart';
+import '../../chats/offline_message_repository.dart';
 
 class GroupsPage extends StatefulWidget {
-  const GroupsPage({super.key, required this.repository});
+  const GroupsPage({super.key, required this.repository, required this.currentUserId});
   final GroupRepository repository;
+  final String currentUserId;
   @override State<GroupsPage> createState()=>_GroupsPageState();
 }
 class _GroupsPageState extends State<GroupsPage> {
@@ -18,5 +21,5 @@ class _GroupsPageState extends State<GroupsPage> {
     if(name==null||name.isEmpty)return;
     try{await widget.repository.create(name);if(mounted)_reload();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Could not create group: $e')));}
   }
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Groups'),actions:[IconButton(onPressed:_reload,icon:const Icon(Icons.refresh))]),floatingActionButton:FloatingActionButton.extended(onPressed:_create,icon:const Icon(Icons.group_add),label:const Text('New group')),body:FutureBuilder<List<Group>>(future:_future,builder:(context,snapshot){if(snapshot.connectionState==ConnectionState.waiting)return const Center(child:CircularProgressIndicator());if(snapshot.hasError)return Center(child:Column(mainAxisSize:MainAxisSize.min,children:[const Text('Could not load groups'),const SizedBox(height:8),FilledButton(onPressed:_reload,child:const Text('Retry'))]));final groups=snapshot.data??const [];if(groups.isEmpty)return const Center(child:Text('No groups yet'));return RefreshIndicator(onRefresh:()async=>_reload(),child:ListView.separated(padding:const EdgeInsets.all(12),itemCount:groups.length,separatorBuilder:(_,__)=>const SizedBox(height:8),itemBuilder:(context,i){final g=groups[i];return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.groups_outlined)),title:Text(g.name),subtitle:Text('${g.memberCount} members • ${g.role}'),trailing:const Icon(Icons.chevron_right)));});}));
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Groups'),actions:[IconButton(onPressed:_reload,icon:const Icon(Icons.refresh))]),floatingActionButton:FloatingActionButton.extended(onPressed:_create,icon:const Icon(Icons.group_add),label:const Text('New group')),body:FutureBuilder<List<Group>>(future:_future,builder:(context,snapshot){if(snapshot.connectionState==ConnectionState.waiting)return const Center(child:CircularProgressIndicator());if(snapshot.hasError)return Center(child:Column(mainAxisSize:MainAxisSize.min,children:[const Text('Could not load groups'),const SizedBox(height:8),FilledButton(onPressed:_reload,child:const Text('Retry'))]));final groups=snapshot.data??const [];if(groups.isEmpty)return const Center(child:Text('No groups yet'));return RefreshIndicator(onRefresh:()async=>_reload(),child:ListView.separated(padding:const EdgeInsets.all(12),itemCount:groups.length,separatorBuilder:(_,__)=>const SizedBox(height:8),itemBuilder:(context,i){final g=groups[i];return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.groups_outlined)),title:Text(g.name),subtitle:Text('${g.memberCount} members • ${g.role}'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.of(context).push(MaterialPageRoute(builder:(_)=>ChatPage(conversationId:g.conversationId,conversationName:g.name,currentUserId:currentUserId,repository:OfflineMessageRepository(api:repository.api))))));});}));
 }
