@@ -30,6 +30,6 @@ class AuthRepository {
   Future<void> signOut() async {
     try { await api.post('/api/v1/auth/logout', authenticated: true); } catch (_) {}
     await store.clear();
-    await google.signOut();
+    try { await google.signOut(); } catch (_) {}
   }
 }
