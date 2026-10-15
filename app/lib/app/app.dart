@@ -73,10 +73,17 @@ class _AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FutureBuilder<String?>(
-    future: auth.store.accessToken(),
+    future: _loadUserId(),
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      if (snapshot.hasError) {
+        return Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Could not restore your session.'),
+          const SizedBox(height: 12),
+          FilledButton(onPressed: () => context.go('/login'), child: const Text('Sign in again')),
+        ]))));
       }
       if ((snapshot.data ?? '').isEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
