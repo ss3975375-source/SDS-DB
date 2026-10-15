@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'app_lock_controller.dart';
+import 'app_lock_service.dart';
 
-/// Places a privacy-preserving lock surface above authenticated content.
 class AppLockGate extends StatefulWidget {
   const AppLockGate({super.key, required this.controller, required this.child});
   final AppLockController controller;
   final Widget child;
-
   @override
   State<AppLockGate> createState() => _AppLockGateState();
 }
 
 class _AppLockGateState extends State<AppLockGate> {
+  final TextEditingController _passcodeController = TextEditingController();
+  String? _error;
+
   @override
   void initState() {
     super.initState();
@@ -32,56 +34,67 @@ class _AppLockGateState extends State<AppLockGate> {
   @override
   void dispose() {
     widget.controller.removeListener(_changed);
+    _passcodeController.dispose();
     super.dispose();
   }
 
-  void _changed() {
-    if (mounted) setState(() {});
+  void _changed() { if (mounted) setState(() {}); }
+
+  Future<void> _submitPasscode() async {
+    final ok = await widget.controller.unlockWithPasscode(_passcodeController.text);
+    if (!mounted) return;
+    setState(() {
+      _error = ok ? null : 'Incorrect passcode or temporarily locked. Try again later.';
+      if (ok) _passcodeController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.controller.initializing) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    if (widget.controller.initializing) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!widget.controller.locked) return widget.child;
-
+    final isPasscode = widget.controller.currentMode == AppLockMode.passcode;
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.lock_outline, size: 64),
                 const SizedBox(height: 20),
                 Text('SDS-DB is locked', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                const Text(
-                  'Authenticate to continue. Private content stays behind the app-lock screen.',
-                  textAlign: TextAlign.center,
-                ),
+                Text(isPasscode ? 'Enter your passcode to protect your private content.' : 'Authenticate to continue. Private content stays behind the app-lock screen.', textAlign: TextAlign.center),
                 const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: widget.controller.authenticating ? null : widget.controller.unlock,
-                  icon: widget.controller.authenticating
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.fingerprint),
-                  label: Text(widget.controller.authenticating ? 'Authenticating…' : 'Unlock'),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Biometric verification is performed by the operating system; SDS-DB does not receive biometric data.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
+                if (isPasscode) ...[
+                  TextField(
+                    controller: _passcodeController,
+                    autofocus: true,
+                    obscureText: true,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    maxLength: 12,
+                    onSubmitted: (_) => _submitPasscode(),
+                    decoration: InputDecoration(labelText: '6–12 digit passcode', errorText: _error, border: const OutlineInputBorder(), counterText: ''),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(width: double.infinity, child: FilledButton(onPressed: widget.controller.authenticating ? null : _submitPasscode, child: Text(widget.controller.authenticating ? 'Checking…' : 'Unlock'))),
+                ] else ...[
+                  SizedBox(width: double.infinity, child: FilledButton.icon(
+                    onPressed: widget.controller.authenticating ? null : widget.controller.unlock,
+                    icon: widget.controller.authenticating ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.fingerprint),
+                    label: Text(widget.controller.authenticating ? 'Authenticating…' : 'Unlock'),
+                  )),
+                  const SizedBox(height: 12),
+                  const Text('Biometric verification is performed by the operating system; SDS-DB does not receive biometric data.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                ],
+              ]),
             ),
           ),
         ),
       ),
     );
   }
-
 }
