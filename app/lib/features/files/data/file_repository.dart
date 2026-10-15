@@ -22,7 +22,7 @@ class FileRepository {
     final total = await file.length();
     if (total != upload.totalBytes) throw StateError('File changed after upload initialization');
     final existing = await api.get('/api/v1/files/uploads/${upload.uploadId}/parts', authenticated: true);
-    final completed = <int>{for (final p in (existing['parts'] as List<dynamic>? ?? const []) as List) (p['partNumber'] as num).toInt()};
+    final completed = <int>{for (final p in (existing['parts'] as List<dynamic>? ?? const [])) (p['partNumber'] as num).toInt()};
     var sent = 0;
     for (final p in (existing['parts'] as List<dynamic>? ?? const [])) { sent += (p['byteSize'] as num).toInt(); }
     onProgress?.call(sent, total);
@@ -36,7 +36,7 @@ class FileRepository {
       request.headers['content-length'] = (signed['expectedBytes'] as num).toInt().toString();
       request.headers['content-type'] = 'application/octet-stream';
       await request.sink.addStream(file.openRead(start, endExclusive));
-      final response = await request.send();
+      final response = await _client.send(request);
       if (response.statusCode < 200 || response.statusCode >= 300) throw Exception('Storage part upload failed (${response.statusCode})');
       final etag = response.headers['etag'];
       if (etag == null || etag.isEmpty) throw StateError('Storage did not return an ETag');
