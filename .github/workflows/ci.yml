@@ -27,7 +27,9 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=20
     env:
       NODE_ENV: test
-      DATABASE_URL: postgresql://sdsdb:ci-password@localhost:5432/sdsdb_test
+      DATABASE_URL: postgresql://localhost:5432/sdsdb_test
+      PGUSER: sdsdb
+      PGPASSWORD: ci-password
       JWT_SECRET: ci-only-secret-that-is-long-enough
       CORS_ORIGINS: https://ci.example.invalid
     defaults:
