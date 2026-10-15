@@ -83,7 +83,7 @@ class AppLockService {
     final iterations = int.tryParse(parts[1]);
     if (iterations == null || iterations < 100000 || iterations > 1000000) return false;
 
-    if (!RegExp(r'^\\d{6,12}$').hasMatch(passcode)) {
+    if (!RegExp(r'^\d{6,12}$').hasMatch(passcode)) {
       await _recordFailedAttempt();
       return false;
     }
