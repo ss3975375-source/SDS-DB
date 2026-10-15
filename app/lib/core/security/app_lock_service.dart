@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -60,7 +61,8 @@ class AppLockService {
     if (!RegExp(r'^\d{6,12}$').hasMatch(passcode)) {
       throw ArgumentError('Use a passcode containing 6 to 12 digits.');
     }
-    final salt = await Cryptography.instance.newRandomBytes(16);
+    final random = Random.secure();
+    final salt = List<int>.generate(16, (_) => random.nextInt(256));
     final algorithm = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: _iterations, bits: 256);
     final key = await algorithm.deriveKey(secretKey: SecretKey(utf8.encode(passcode)), nonce: salt);
     final digest = await key.extractBytes();
