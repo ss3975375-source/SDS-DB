@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/network/api_client.dart';
 import '../../core/security/app_lock_controller.dart';
 import '../authentication/auth_repository.dart';
@@ -44,6 +45,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int index = 0;
 
+  Future<void> _signOut() async {
+    await widget.auth.signOut();
+    if (mounted) context.go('/login');
+  }
+
   void _openGroups() => Navigator.of(context).push(MaterialPageRoute(
     builder: (_) => GroupsPage(
       repository: GroupRepository(widget.api),
@@ -66,7 +72,7 @@ class _HomePageState extends State<HomePage> {
       _SecurityPage(
         api: widget.api,
         lockController: widget.lockController,
-        onSignOut: widget.auth.signOut,
+        onSignOut: _signOut,
       ),
     ];
 
