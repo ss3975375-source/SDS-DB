@@ -71,6 +71,15 @@ class _AuthGate extends StatelessWidget {
   final ApiClient api;
   final AppLockController lockController;
 
+  Future<String?> _loadUserId() async {
+    final token = await auth.store.accessToken();
+    if (token == null || token.isEmpty) return null;
+    final cached = await auth.store.userId();
+    if (cached != null && cached.isNotEmpty) return cached;
+    final user = await auth.currentUser();
+    return user['id'] as String?;
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder<String?>(
     future: _loadUserId(),
@@ -98,6 +107,7 @@ class _AuthGate extends StatelessWidget {
           auth: auth,
           api: api,
           lockController: lockController,
+          currentUserId: snapshot.data!,
         ),
       );
     },
