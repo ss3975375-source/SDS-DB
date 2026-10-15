@@ -12,6 +12,14 @@ import '../feel_it/feel_it_repository.dart';
 import '../groups/data/group_repository.dart';
 import '../groups/presentation/groups_page.dart';
 import '../security/security_page.dart' as lock_settings;
+import '../sessions/session_repository.dart';
+import '../sessions/sessions_page.dart';
+import '../settings/privacy_repository.dart';
+import '../settings/privacy_page.dart';
+import '../settings/account_repository.dart';
+import '../settings/account_deletion_page.dart';
+import '../notifications/notification_repository.dart';
+import '../notifications/notifications_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -238,21 +246,31 @@ class _SecurityPage extends StatelessWidget {
         title: const Text('Devices and sessions'),
         subtitle: const Text('Review active sessions and revoke devices'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Session management is being connected.'))),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SessionsPage(repository: SessionRepository(api)))),
       )),
       Card(child: ListTile(
         leading: const Icon(Icons.visibility_off_outlined),
         title: const Text('Privacy settings'),
         subtitle: const Text('Discovery, contact requests, and presence'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Privacy settings are being connected.'))),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PrivacyPage(repository: PrivacyRepository(api)))),
       )),
       Card(child: ListTile(
         leading: const Icon(Icons.notifications_outlined),
         title: const Text('Notifications'),
         subtitle: const Text('Message and lock-screen preferences'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification settings are being connected.'))),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => NotificationsPage(repository: NotificationRepository(api)))),
+      )),
+      Card(child: ListTile(
+        leading: const Icon(Icons.delete_forever_outlined),
+        title: const Text('Account deletion'),
+        subtitle: const Text('Request or review account deletion'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AccountDeletionPage(
+          repository: AccountRepository(api),
+          onDeletionRequested: onSignOut,
+        ))),
       )),
       const SizedBox(height: 16),
       FilledButton.tonal(onPressed: onSignOut, child: const Text('Sign out')),
