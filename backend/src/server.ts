@@ -16,6 +16,7 @@ import { messageSyncRoutes } from './routes/messageSync.js';
 import { pool } from './db/pool.js';
 import { registerSessionRoutes } from './routes/sessions.js';
 import { messageLifecycleRoutes } from './routes/messageLifecycle.js';
+import { conversationRoutes } from './routes/conversations.js';
 import { redactSensitive } from './utils/security.js';
 
 export async function buildApp() {
@@ -51,6 +52,7 @@ export async function buildApp() {
   app.register(quotaRoutes, { prefix: '/api/v1/files' });
   app.register(fileRoutes, { prefix: '/api/v1/files' });
   app.register(groupRoutes, { prefix: '/api/v1/groups' });
+  app.register(conversationRoutes, { prefix: '/api/v1/conversations' });
   app.register(messageSyncRoutes, { prefix: '/api/v1/messages' });
   app.register(messageRoutes, { prefix: '/api/v1/messages' });
   app.register(messageLifecycleRoutes, { prefix: '/api/v1/message-lifecycle' });
