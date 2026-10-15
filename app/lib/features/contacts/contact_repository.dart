@@ -45,6 +45,9 @@ class ContactRepository {
   Future<Map<String, dynamic>> consumeQr(String token) =>
       api.post('/api/v1/contacts/qr/consume', authenticated: true, body: {'token': token});
 
+  Future<Map<String, dynamic>> openConversation(String userId) =>
+      api.post('/api/v1/conversations/direct', authenticated: true, body: {'userId': userId});
+
   Future<Map<String, dynamic>> discover(String userId) =>
       api.get('/api/v1/users/discover?userId=${Uri.encodeQueryComponent(userId.trim())}', authenticated: true);
 }
