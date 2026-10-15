@@ -14,6 +14,14 @@ const googleSchema = z.object({
 const refreshSchema = z.object({ refreshToken: z.string().min(20).max(500) });
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
+  app.get('/me', { preHandler: requireAuth }, async (request, reply) => {
+    const result = await pool.query(
+      'SELECT id, email, display_name, photo_url FROM users WHERE id=$1 AND deleted_at IS NULL',
+      [request.auth.userId],
+    );
+    if (!result.rows[0]) return reply.code(404).send({ error: 'user_not_found' });
+    return reply.send({ user: result.rows[0] });
+  });
   app.post('/google', async (request, reply) => {
     const parsed = googleSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: 'Invalid authentication request' });
