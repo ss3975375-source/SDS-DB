@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/network/api_client.dart';
 import 'contact_repository.dart';
 import '../chats/chat_page.dart';
@@ -76,6 +77,36 @@ class _ContactsPageState extends State<ContactsPage> {
     }
   }
 
+  Future<void> _createInvite() async {
+    try {
+      final invite = await _repository.createQr();
+      if (!mounted) return;
+      final token = invite['token'] as String;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Contact invite code'),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Share this short-lived code privately. Anyone who uses it before expiry can add you as a contact.'),
+            const SizedBox(height: 12),
+            SelectableText(token, style: const TextStyle(fontFamily: 'monospace')),
+            const SizedBox(height: 8),
+            Text('Expires: ${DateTime.parse(invite['expiresAt'] as String).toLocal()}'),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+            FilledButton.icon(onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: token));
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invite code copied.')));
+            }, icon: const Icon(Icons.copy), label: const Text('Copy code')),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not create invite code: $error')));
+    }
+  }
+
   Future<void> _joinInvite() async {
     final controller = TextEditingController();
     final token = await showDialog<String>(
@@ -107,6 +138,7 @@ class _ContactsPageState extends State<ContactsPage> {
     appBar: AppBar(
       title: const Text('Contacts'),
       actions: [
+        IconButton(tooltip: 'Create invite code', onPressed: _createInvite, icon: const Icon(Icons.qr_code_2)),
         IconButton(tooltip: 'Refresh contacts', onPressed: _reload, icon: const Icon(Icons.refresh)),
       ],
     ),
