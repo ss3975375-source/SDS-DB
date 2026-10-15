@@ -4,20 +4,17 @@ class AccountDeletionStatus {
   final String jobId;
   final DateTime scheduledFor;
   final String status;
-  final DateTime requestedAt;
 
   const AccountDeletionStatus({
     required this.jobId,
     required this.scheduledFor,
     required this.status,
-    required this.requestedAt,
   });
 
   factory AccountDeletionStatus.fromJson(Map<String, dynamic> json) => AccountDeletionStatus(
     jobId: json['jobId'] as String,
     scheduledFor: DateTime.parse(json['scheduledFor'] as String),
     status: json['status'] as String,
-    requestedAt: DateTime.parse(json['requestedAt'] as String),
   );
 }
 
