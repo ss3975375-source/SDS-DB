@@ -95,7 +95,7 @@ class AppLockController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> enablePasscode(String passcode) async {
     await service.configurePasscode(passcode);
     currentMode = AppLockMode.passcode;
-    locked = true;
+    locked = false;
     _failedPasscodeAttempts = 0;
     _passcodeBlockedUntil = null;
     await service.clearBackgrounded();
@@ -105,7 +105,7 @@ class AppLockController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> enableBiometrics() async {
     await service.setMode(AppLockMode.biometrics);
     currentMode = AppLockMode.biometrics;
-    locked = true;
+    locked = false;
     await service.clearBackgrounded();
     notifyListeners();
   }
