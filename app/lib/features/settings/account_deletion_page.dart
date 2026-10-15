@@ -88,7 +88,7 @@ class _AccountDeletionPageState extends State<AccountDeletionPage> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Delete your SDS-DB account', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 12),
-            const Text('Deletion starts a server-side workflow. The final deletion is scheduled after the cancellation period.'),
+            const Text('Deletion starts a server-side workflow. Final deletion is scheduled after the 24-hour cancellation period.'),
             const SizedBox(height: 12),
             const Text('Your profile, contacts, devices, notifications, Feel It content, account-owned messages and private files are removed subject to documented retention requirements.'),
             const SizedBox(height: 20),
