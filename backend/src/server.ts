@@ -60,6 +60,9 @@ export async function buildApp() {
     const message = error instanceof Error ? error.message : '';
     const errorName = error instanceof Error ? error.name : '';
     const authFailure = message === 'UNAUTHENTICATED' || ['JWTExpired','JWSInvalid','JWTClaimValidationFailed'].includes(errorName);
+    if (message === 'ACCOUNT_DELETION_PENDING') {
+      return reply.code(403).send({ error: 'Account deletion is pending; only status and cancellation are allowed.' });
+    }
     if (authFailure) {
       request.log.warn({ event: 'authn_failed', requestId: request.id }, 'authentication failed');
       return reply.code(401).send({ error: 'Authentication required' });
