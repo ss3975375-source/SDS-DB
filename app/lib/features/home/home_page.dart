@@ -275,7 +275,6 @@ class _SecurityPage extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AccountDeletionPage(
           repository: AccountRepository(api),
-          onDeletionRequested: onSignOut,
         ))),
       )),
       const SizedBox(height: 16),
