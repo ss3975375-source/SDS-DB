@@ -18,6 +18,7 @@ class SecureSessionStore {
   Future<String?> accessToken() => _storage.read(key: _access);
   Future<String?> refreshToken() => _storage.read(key: _refresh);
   Future<String?> userId() => _storage.read(key: _userId);
+  Future<void> saveUserId(String userId) => _storage.write(key: _userId, value: userId);
 
   Future<void> clear() async {
     await _storage.delete(key: _access);
