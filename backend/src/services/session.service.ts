@@ -37,7 +37,7 @@ export async function rotateSession(refreshToken: string) {
          FROM sessions s
          JOIN users u ON u.id = s.user_id
          LEFT JOIN devices d ON d.id = s.device_id
-        WHERE s.refresh_token_hash = $1 FOR UPDATE`,
+        WHERE s.refresh_token_hash = $1 FOR UPDATE OF s`,
       [hash],
     );
     const row = current.rows[0];
