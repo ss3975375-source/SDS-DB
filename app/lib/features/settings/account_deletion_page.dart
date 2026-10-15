@@ -29,8 +29,7 @@ class _AccountDeletionPageState extends State<AccountDeletionPage> {
         _confirmed = false;
         _status = Future.value(status);
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deletion request submitted. Your session may be revoked for safety.')));
-      await widget.onDeletionRequested?.call();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deletion request submitted. This session remains available to check status or cancel during the grace period.')));
     } catch (error) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not request deletion: $error')));
     } finally {
@@ -80,7 +79,7 @@ class _AccountDeletionPageState extends State<AccountDeletionPage> {
               const SizedBox(height: 8),
               Text('Scheduled for: ${status.scheduledFor.toLocal()}'),
               const SizedBox(height: 8),
-              const Text('If your session has been revoked, cancellation may require signing in again.'),
+              const Text('This session can only check deletion status or cancel the request during the 24-hour grace period.'),
               const Spacer(),
               SizedBox(width: double.infinity, child: OutlinedButton(
                 onPressed: _busy ? null : _cancelDeletion,
