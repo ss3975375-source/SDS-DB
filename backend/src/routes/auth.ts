@@ -30,11 +30,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
              email = EXCLUDED.email,
              display_name = EXCLUDED.display_name,
              photo_url = EXCLUDED.photo_url,
-             updated_at = now(), deleted_at = NULL
+             updated_at = now()
+           WHERE users.deleted_at IS NULL
+             AND users.deletion_requested_at IS NULL
            RETURNING id, email, display_name, photo_url`,
           [identity.subject, identity.email.toLowerCase(), identity.displayName, identity.photoUrl],
         );
         const user = userResult.rows[0];
+        if (!user) throw new Error('ACCOUNT_UNAVAILABLE');
         const deviceResult = await client.query(
           `INSERT INTO devices (user_id, platform, label, app_version, last_seen_at)
            VALUES ($1, $2, $3, $4, now()) RETURNING id`,

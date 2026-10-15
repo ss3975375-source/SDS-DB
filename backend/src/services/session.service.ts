@@ -33,14 +33,15 @@ export async function rotateSession(refreshToken: string) {
     await client.query('BEGIN');
     const current = await client.query(
       `SELECT s.id, s.user_id, s.device_id, s.expires_at, s.revoked_at,
-              d.revoked_at AS device_revoked_at
+              d.revoked_at AS device_revoked_at, u.deleted_at AS user_deleted_at
          FROM sessions s
+         JOIN users u ON u.id = s.user_id
          LEFT JOIN devices d ON d.id = s.device_id
-        WHERE s.refresh_token_hash = $1 FOR UPDATE`,
+        WHERE s.refresh_token_hash = $1 FOR UPDATE OF s`,
       [hash],
     );
     const row = current.rows[0];
-    if (!row || row.revoked_at || row.device_revoked_at || new Date(row.expires_at).getTime() <= Date.now()) {
+    if (!row || row.revoked_at || row.device_revoked_at || row.user_deleted_at || new Date(row.expires_at).getTime() <= Date.now()) {
       throw new Error('Invalid refresh session');
     }
 

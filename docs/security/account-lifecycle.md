@@ -34,8 +34,8 @@ security workflows. Moderation internals are not exposed to normal users.
 Deletion is a backend-controlled asynchronous workflow:
 1. authenticate the requesting account;
 2. require explicit confirmation;
-3. revoke active sessions;
-4. mark the account as pending deletion;
+3. mark the account as pending deletion and immediately revoke all other sessions;
+4. restrict the current session to deletion-status and cancellation endpoints during the grace period;
 5. remove profile/device/contact/block/notification data;
 6. remove Feel It data and private objects;
 7. handle messages according to the documented retention policy;
