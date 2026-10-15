@@ -7,6 +7,7 @@ import '../groups/data/group_repository.dart';
 import '../groups/presentation/groups_page.dart';
 import '../../core/network/api_client.dart';
 import '../../core/security/app_lock_controller.dart';
+import '../../core/security/app_lock_settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.googleAuth, required this.auth, required this.api, required this.lockController});
@@ -25,7 +26,12 @@ class _HomePageState extends State<HomePage> {
       const _Section(title: 'Contacts', icon: Icons.people_outline, message: 'Add people by user ID or invitation.'),
       const _Section(title: 'Files', icon: Icons.folder_outlined, message: 'Private files shared with you will appear here.'),
       FeelItPage(repository: FeelItRepository(widget.api)),
-      _SecurityPage(onSignOut: widget.auth.signOut),
+      _SecurityPage(
+        onSignOut: widget.auth.signOut,
+        onAppLock: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => AppLockSettingsPage(controller: widget.lockController),
+        )),
+      ),
     ];
     return Scaffold(
       appBar: AppBar(title: const Text('SDS-DB'), actions: [IconButton(onPressed: () => widget.lockController.lock(), icon: const Icon(Icons.lock_outline), tooltip: 'Lock app')]),
@@ -59,10 +65,11 @@ class _Section extends StatelessWidget {
 }
 
 class _SecurityPage extends StatelessWidget {
-  const _SecurityPage({required this.onSignOut});
+  const _SecurityPage({required this.onSignOut, required this.onAppLock});
   final Future<void> Function() onSignOut;
+  final VoidCallback onAppLock;
   @override Widget build(BuildContext context) => ListView(padding: const EdgeInsets.all(16), children: [
-    const ListTile(leading: Icon(Icons.fingerprint), title: Text('Biometric unlock'), subtitle: Text('App-lock foundation')), 
+    ListTile(leading: const Icon(Icons.lock_outline), title: const Text('App lock'), subtitle: const Text('Set a passcode or enable biometrics'), trailing: const Icon(Icons.chevron_right), onTap: onAppLock), 
     const ListTile(leading: Icon(Icons.devices_outlined), title: Text('Sessions'), subtitle: Text('Manage signed-in devices')), 
     const ListTile(leading: Icon(Icons.visibility_off_outlined), title: Text('Privacy'), subtitle: Text('Notification and content controls')), 
     const SizedBox(height: 12), FilledButton.tonal(onPressed: onSignOut, child: const Text('Sign out')),
