@@ -51,7 +51,7 @@ export async function buildApp() {
   app.register(quotaRoutes, { prefix: '/api/v1/files' });
   app.register(fileRoutes, { prefix: '/api/v1/files' });
   app.register(groupRoutes, { prefix: '/api/v1/groups' });
-  app.register(messageSyncRoutes);
+  app.register(messageSyncRoutes, { prefix: '/api/v1/messages' });
   app.register(messageRoutes, { prefix: '/api/v1/messages' });
   app.register(messageLifecycleRoutes, { prefix: '/api/v1/message-lifecycle' });
   app.setErrorHandler((error, request, reply) => {
