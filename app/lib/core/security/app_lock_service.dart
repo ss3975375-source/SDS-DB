@@ -49,6 +49,8 @@ class AppLockService {
     });
     if (value == AppLockMode.off) {
       await removePasscodeVerifier();
+      await storage.delete(key: _failedAttemptsKey);
+      await storage.delete(key: _blockedUntilKey);
       await clearBackgrounded();
     }
   }
@@ -64,6 +66,8 @@ class AppLockService {
     final digest = await key.extractBytes();
     final verifier = 'pbkdf2-sha256:$_iterations:${base64.encode(salt)}:${base64.encode(digest)}';
     await storage.write(key: _passcodeVerifierKey, value: verifier);
+    await storage.delete(key: _failedAttemptsKey);
+    await storage.delete(key: _blockedUntilKey);
     await storage.write(key: _modeKey, value: 'passcode');
   }
 
