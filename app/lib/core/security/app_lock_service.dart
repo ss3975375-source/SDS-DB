@@ -10,7 +10,11 @@ class AppLockService {
   static const _modeKey = 'sds_app_lock_mode';
   static const _passcodeVerifierKey = 'sds_app_lock_passcode_verifier';
   static const _lastBackgroundKey = 'sds_app_lock_last_background_ms';
+  static const _failedAttemptsKey = 'sds_app_lock_failed_passcode_attempts';
+  static const _blockedUntilKey = 'sds_app_lock_passcode_blocked_until_ms';
   static const _iterations = 120000;
+  static const _maxAttempts = 5;
+  static const _lockoutDuration = Duration(seconds: 30);
   final FlutterSecureStorage storage;
   final LocalAuthentication localAuth;
 
@@ -64,13 +68,25 @@ class AppLockService {
   }
 
   Future<bool> verifyPasscode(String passcode) async {
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final blockedUntil = int.tryParse((await storage.read(key: _blockedUntilKey)) ?? '');
+    if (blockedUntil != null && now < blockedUntil) return false;
+    if (blockedUntil != null) {
+      await storage.delete(key: _blockedUntilKey);
+      await storage.delete(key: _failedAttemptsKey);
+    }
+
     final stored = await storage.read(key: _passcodeVerifierKey);
     if (stored == null) return false;
     final parts = stored.split(':');
     if (parts.length != 4 || parts[0] != 'pbkdf2-sha256') return false;
     final iterations = int.tryParse(parts[1]);
     if (iterations == null || iterations < 100000 || iterations > 1000000) return false;
-    if (!RegExp(r'^\d{6,12}$').hasMatch(passcode)) return false;
+
+    if (!RegExp(r'^\\d{6,12}$').hasMatch(passcode)) {
+      await _recordFailedAttempt();
+      return false;
+    }
     try {
       final salt = base64.decode(parts[2]);
       final expected = base64.decode(parts[3]);
@@ -82,9 +98,27 @@ class AppLockService {
       for (var i = 0; i < expected.length; i++) {
         difference |= expected[i] ^ actual[i];
       }
-      return difference == 0;
+      if (difference == 0) {
+        await storage.delete(key: _failedAttemptsKey);
+        await storage.delete(key: _blockedUntilKey);
+        return true;
+      }
+      await _recordFailedAttempt();
+      return false;
     } on FormatException {
       return false;
+    }
+  }
+
+  Future<void> _recordFailedAttempt() async {
+    final current = int.tryParse((await storage.read(key: _failedAttemptsKey)) ?? '') ?? 0;
+    final next = current + 1;
+    if (next >= _maxAttempts) {
+      final until = DateTime.now().toUtc().add(_lockoutDuration).millisecondsSinceEpoch;
+      await storage.write(key: _blockedUntilKey, value: until.toString());
+      await storage.delete(key: _failedAttemptsKey);
+    } else {
+      await storage.write(key: _failedAttemptsKey, value: next.toString());
     }
   }
 
