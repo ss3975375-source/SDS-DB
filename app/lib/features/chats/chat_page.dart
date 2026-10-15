@@ -112,7 +112,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 );
               }
-              final items = (snapshot.data ?? const <OfflineMessage>[]).reversed.toList(growable: false);
+              final items = snapshot.data ?? const <OfflineMessage>[];
               if (items.isEmpty) {
                 return RefreshIndicator(
                   onRefresh: _refresh,
