@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/network/api_client.dart';
 import 'contact_repository.dart';
+import '../chats/chat_page.dart';
+import '../chats/offline_message_repository.dart';
 
 class ContactsPage extends StatefulWidget {
-  const ContactsPage({super.key, required this.api});
+  const ContactsPage({super.key, required this.api, required this.currentUserId});
   final ApiClient api;
+  final String currentUserId;
 
   @override
   State<ContactsPage> createState() => _ContactsPageState();
@@ -158,10 +161,29 @@ class _ContactsPageState extends State<ContactsPage> {
                   title: Text(contact['displayName'] as String? ?? 'SDS-DB user'),
                   subtitle: SelectableText(contact['id'] as String),
                   trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'remove') _run(() => _repository.removeContact(contact['id'] as String), 'Contact removed.');
+                    onSelected: (value) async {
+                      final contactId = contact['id'] as String;
+                      if (value == 'remove') {
+                        await _run(() => _repository.removeContact(contactId), 'Contact removed.');
+                      } else if (value == 'message') {
+                        try {
+                          final result = await _repository.openConversation(contactId);
+                          if (!context.mounted) return;
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => ChatPage(
+                            conversationId: result['conversationId'] as String,
+                            conversationName: contact['displayName'] as String? ?? 'Conversation',
+                            currentUserId: widget.currentUserId,
+                            repository: OfflineMessageRepository(api: widget.api),
+                          )));
+                        } catch (error) {
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open conversation: $error')));
+                        }
+                      }
                     },
-                    itemBuilder: (_) => const [PopupMenuItem(value: 'remove', child: Text('Remove contact'))],
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'message', child: Text('Message')),
+                      PopupMenuItem(value: 'remove', child: Text('Remove contact')),
+                    ],
                   ),
                 )),
             ],
