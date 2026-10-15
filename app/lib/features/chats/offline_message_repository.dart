@@ -63,15 +63,37 @@ class OfflineMessageRepository {
     return (await listConversation(conversationId)).firstWhere((m) => m.clientMessageId == clientId);
   }
 
-  Future<int> flushPending() async {
+  Future<int> flushPending({String? senderId}) async {
     final db = await LocalMessageDatabase.instance.database;
-    final rows = await db.query('messages', where: 'sync_state = ?', whereArgs: ['pending'], orderBy: 'created_at ASC', limit: 100);
+    final rows = await db.query(
+      'messages',
+      where: senderId == null ? 'sync_state = ?' : 'sync_state = ? AND sender_id = ?',
+      whereArgs: senderId == null ? ['pending'] : ['pending', senderId],
+      orderBy: 'created_at ASC',
+      limit: 100,
+    );
     var sent = 0;
     for (final row in rows) {
       try {
         final body = await _decrypt(row);
         final expires = row['expires_at'] as String?;
-        final response = await api.post('/api/v1/messages/${row['conversation_id']}', authenticated: true, body: {'body': body, if (expires != null) 'expiresInSeconds': DateTime.parse(expires).difference(DateTime.parse(row['created_at'] as String)).inSeconds.clamp(0, 30 * 24 * 60 * 60), 'clientMessageId': row['client_message_id']});
+        if (expires != null && !DateTime.parse(expires).toUtc().isAfter(DateTime.now().toUtc())) {
+          await db.update(
+            'messages',
+            {'sync_state': 'expired', 'deleted_at': expires},
+            where: 'id = ?',
+            whereArgs: [row['id']],
+          );
+          continue;
+        }
+        final remainingSeconds = expires == null
+            ? null
+            : DateTime.parse(expires).toUtc().difference(DateTime.now().toUtc()).inSeconds.clamp(1, 30 * 24 * 60 * 60);
+        final response = await api.post('/api/v1/messages/${row['conversation_id']}', authenticated: true, body: {
+          'body': body,
+          if (remainingSeconds != null) 'expiresInSeconds': remainingSeconds,
+          'clientMessageId': row['client_message_id'],
+        });
         await db.update('messages', {'sync_state': 'sent', 'server_id': response['id']}, where: 'id = ?', whereArgs: [row['id']]);
         sent++;
       } catch (_) { break; }
