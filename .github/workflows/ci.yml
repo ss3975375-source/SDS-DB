@@ -31,6 +31,9 @@ jobs:
       PGUSER: sdsdb
       PGPASSWORD: ci-password
       JWT_SECRET: ci-only-secret-that-is-long-enough
+      GOOGLE_WEB_CLIENT_ID: ci-test.apps.googleusercontent.com
+      STORAGE_ACCESS_KEY: ci-storage-access-key
+      STORAGE_SECRET_KEY: ci-storage-secret-key
       CORS_ORIGINS: https://ci.example.invalid
     defaults:
       run:
