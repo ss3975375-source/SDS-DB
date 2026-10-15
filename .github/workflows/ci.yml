@@ -44,6 +44,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run security:audit
+      - run: npm run migrate
       - run: npm test
 
   flutter:
