@@ -36,8 +36,6 @@ void main() {
     expect(controller.locked, isTrue);
     controller.dispose();
   });
-}
-
 
 test('passcode unlock only succeeds after verifier accepts it', () async {
   final service = _FakeLockService()..current = AppLockMode.passcode;
@@ -64,3 +62,5 @@ test('passcode mode cannot be unlocked by biometric-only entry point', () async 
   expect(controller.locked, isTrue);
   controller.dispose();
 });
+
+}
