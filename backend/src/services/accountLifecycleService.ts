@@ -238,6 +238,6 @@ export async function createReport(reporterId: string, input: {reportedUserId?:s
 }
 
 export async function getDeletionStatus(userId: string) {
-  const r = await pool.query(`SELECT id,scheduled_for,status,requested_at FROM account_deletion_jobs WHERE user_id=$1 ORDER BY requested_at DESC LIMIT 1`, [userId]);
+  const r = await pool.query(`SELECT id,scheduled_for,status,requested_at FROM account_deletion_jobs WHERE user_id=$1 AND status IN ('pending','processing') ORDER BY requested_at DESC LIMIT 1`, [userId]);
   return r.rows[0] ? {jobId:r.rows[0].id,scheduledFor:r.rows[0].scheduled_for,status:r.rows[0].status,requestedAt:r.rows[0].requested_at} : null;
 }
