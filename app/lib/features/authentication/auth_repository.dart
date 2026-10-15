@@ -14,8 +14,9 @@ class AuthRepository {
       'identityToken': identityToken,
       'platform': 'android',
     });
-    await store.save(accessToken: response['accessToken'] as String, refreshToken: response['refreshToken'] as String);
-    return response['user'] as Map<String, dynamic>;
+    final user = response['user'] as Map<String, dynamic>;
+    await store.save(accessToken: response['accessToken'] as String, refreshToken: response['refreshToken'] as String, userId: user['id'] as String?);
+    return user;
   }
 
   Future<void> signOut() async {
