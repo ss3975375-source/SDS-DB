@@ -178,7 +178,7 @@ class _ContactsPageState extends State<ContactsPage> {
                     title: Text(request['displayName'] as String? ?? 'SDS-DB user'),
                     subtitle: Text(request['direction'] == 'incoming' ? 'Incoming request' : 'Request sent'),
                     trailing: request['direction'] == 'incoming'
-                      ? Wrap(mainAxisSize: MainAxisSize.min, children: [
+                      ? Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(tooltip: 'Accept', onPressed: () => _run(() => _repository.acceptRequest(request['id'] as String), 'Contact request accepted.'), icon: const Icon(Icons.check_circle_outline)),
                           IconButton(tooltip: 'Decline', onPressed: () => _run(() => _repository.declineRequest(request['id'] as String), 'Contact request declined.'), icon: const Icon(Icons.close)),
                         ])
