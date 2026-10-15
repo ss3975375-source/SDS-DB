@@ -19,6 +19,14 @@ class AuthRepository {
     return user;
   }
 
+  Future<Map<String, dynamic>> currentUser() async {
+    final response = await api.get('/api/v1/auth/me', authenticated: true);
+    final user = response['user'] as Map<String, dynamic>;
+    final id = user['id'] as String?;
+    if (id != null && id.isNotEmpty) await store.saveUserId(id);
+    return user;
+  }
+
   Future<void> signOut() async {
     try { await api.post('/api/v1/auth/logout', authenticated: true); } catch (_) {}
     await store.clear();
