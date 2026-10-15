@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import 'account_repository.dart';
 
 class AccountDeletionPage extends StatefulWidget {
-  const AccountDeletionPage({
-    super.key,
-    required this.repository,
-    this.onDeletionRequested,
-  });
+  const AccountDeletionPage({super.key, required this.repository});
 
   final AccountRepository repository;
-  final Future<void> Function()? onDeletionRequested;
 
   @override
   State<AccountDeletionPage> createState() => _AccountDeletionPageState();
