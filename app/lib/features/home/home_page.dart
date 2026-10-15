@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/network/api_client.dart';
 import '../../core/security/app_lock_controller.dart';
+import '../../core/security/app_lock_settings_page.dart';
 import '../authentication/auth_repository.dart';
 import '../authentication/google_auth_service.dart';
 import '../chats/chat_page.dart';
@@ -12,7 +13,6 @@ import '../feel_it/feel_it_page.dart';
 import '../feel_it/feel_it_repository.dart';
 import '../groups/data/group_repository.dart';
 import '../groups/presentation/groups_page.dart';
-import '../security/security_page.dart' as lock_settings;
 import '../sessions/session_repository.dart';
 import '../sessions/sessions_page.dart';
 import '../settings/privacy_repository.dart';
@@ -245,7 +245,7 @@ class _SecurityPage extends StatelessWidget {
         title: const Text('App lock'),
         subtitle: const Text('Configure app-lock behavior'),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const lock_settings.SecurityPage())),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AppLockSettingsPage(controller: lockController))),
       )),
       Card(child: ListTile(
         leading: const Icon(Icons.devices_outlined),
