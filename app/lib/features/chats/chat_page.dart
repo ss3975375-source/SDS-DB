@@ -42,7 +42,7 @@ class _ChatPageState extends State<ChatPage> {
     if (_syncing) return;
     _syncing = true;
     try {
-      await widget.repository.flushPending();
+      await widget.repository.flushPending(senderId: widget.currentUserId);
       await widget.repository.syncConversation(widget.conversationId);
     } catch (_) {
       // Keep locally stored messages visible when offline or the server is unavailable.
@@ -146,7 +146,7 @@ class _ChatPageState extends State<ChatPage> {
                                 Text(deleted ? 'Message deleted' : message.body),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${TimeOfDay.fromDateTime(message.createdAt.toLocal()).format(context)} · ${message.state == 'pending' ? 'Pending sync' : message.state == 'synced' ? 'Synced' : 'Sent'}',
+                                  '${TimeOfDay.fromDateTime(message.createdAt.toLocal()).format(context)} · ${message.state == 'pending' ? 'Pending sync' : message.state == 'synced' ? 'Synced' : message.state == 'expired' ? 'Expired' : 'Sent'}',
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                               ],
