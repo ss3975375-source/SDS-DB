@@ -8,4 +8,4 @@ CREATE INDEX IF NOT EXISTS notifications_user_created_idx ON notifications(user_
 
 UPDATE users SET email = lower(email) WHERE email <> lower(email);
 ALTER TABLE users ADD CONSTRAINT users_email_lower_chk CHECK (email = lower(email));
-ALTER TABLE attachments ADD CONSTRAINT attachments_max_size_chk CHECK (byte_size <= 20 * 1024 * 1024 * 1024);
+ALTER TABLE attachments ADD CONSTRAINT attachments_max_size_chk CHECK (byte_size <= 20::bigint * 1024 * 1024 * 1024);
