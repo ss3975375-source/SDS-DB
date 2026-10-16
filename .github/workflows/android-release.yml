@@ -6,11 +6,17 @@ on:
       build_name:
         description: Release version name
         required: true
-        default: 0.28.0
+        default: 1.0.0
+        type: string
       build_number:
         description: Release version code
         required: true
-        default: "28"
+        default: "30"
+        type: string
+      api_base_url:
+        description: "Public HTTPS base URL of the deployed SDS-DB API (without a trailing slash)"
+        required: true
+        type: string
 
 jobs:
   release:
@@ -37,14 +43,33 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > app/android/upload-keystore.jks
       - name: Validate release configuration
         working-directory: app
-        run: node ../scripts/check-release-config.mjs
+        env:
+          API_BASE_URL: ${{ inputs.api_base_url }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          test -n "$GOOGLE_WEB_CLIENT_ID" || { echo "Set the GOOGLE_WEB_CLIENT_ID repository variable first."; exit 1; }
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "API_BASE_URL must use HTTPS."; exit 1 ;;
+          esac
+          case "$API_BASE_URL" in
+            *localhost*|*127.0.0.1*|*10.0.2.2*)
+              echo "API_BASE_URL must point to a publicly reachable server."
+              exit 1
+              ;;
+          esac
+          node ../scripts/check-release-config.mjs
       - name: Build and test
         working-directory: app
+        env:
+          API_BASE_URL: ${{ inputs.api_base_url }}
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
         run: |
           flutter pub get
           flutter analyze --no-fatal-infos
           flutter test
-          flutter build appbundle --release --build-name "${{ inputs.build_name }}" --build-number "${{ inputs.build_number }}" --obfuscate --split-debug-info=../artifacts/symbols
+          API_BASE_URL="${API_BASE_URL%/}"
+          flutter build appbundle --release --build-name "${{ inputs.build_name }}" --build-number "${{ inputs.build_number }}" --dart-define=API_BASE_URL="$API_BASE_URL" --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" --obfuscate --split-debug-info=../artifacts/symbols
       - uses: actions/upload-artifact@v4
         with:
           name: sds-db-android-release
