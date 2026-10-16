@@ -12,7 +12,7 @@ BEGIN
       ALTER TABLE feel_it_posts RENAME COLUMN text_body TO text_content;
     END IF;
   END IF;
-END $;
+END $sdsrepair$;
 
 CREATE TABLE IF NOT EXISTS feel_it_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
