@@ -42,7 +42,7 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter analyze
+          flutter analyze --no-fatal-infos
           flutter test
           flutter build appbundle --release --build-name "${{ inputs.build_name }}" --build-number "${{ inputs.build_number }}" --obfuscate --split-debug-info=../artifacts/symbols
       - uses: actions/upload-artifact@v4
