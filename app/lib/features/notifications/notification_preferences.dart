@@ -17,6 +17,22 @@ class NotificationPreferences {
     this.vibrationEnabled=true,
   });
 
+  factory NotificationPreferences.fromApiJson(Map<String, dynamic> json) => NotificationPreferences(
+    messagesEnabled: json['messageEnabled'] as bool? ?? true,
+    groupsEnabled: json['groupEnabled'] as bool? ?? true,
+    contactRequestsEnabled: json['contactRequestEnabled'] as bool? ?? true,
+    feelItEnabled: json['feelItEnabled'] as bool? ?? true,
+    lockScreenPreviewEnabled: json['showPreview'] as bool? ?? false,
+  );
+
+  Map<String, dynamic> toApiJson() => {
+    'messageEnabled': messagesEnabled,
+    'groupEnabled': groupsEnabled,
+    'contactRequestEnabled': contactRequestsEnabled,
+    'feelItEnabled': feelItEnabled,
+    'showPreview': lockScreenPreviewEnabled,
+  };
+
   NotificationPreferences copyWith({
     bool? messagesEnabled,
     bool? groupsEnabled,

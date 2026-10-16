@@ -102,7 +102,7 @@ export function validatePrivacyPatch(input: Record<string, unknown>): Partial<Pr
   return input as Partial<PrivacySettings>;
 }
 
-export async function requestAccountDeletion(userId: string) {
+export async function requestAccountDeletion(userId: string, currentSessionId: string) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -114,7 +114,11 @@ export async function requestAccountDeletion(userId: string) {
     const scheduled = new Date(Date.now() + DELETION_GRACE_MS);
     const job = await client.query(`INSERT INTO account_deletion_jobs(user_id,requested_at,scheduled_for,status) VALUES($1,now(),$2,'pending') RETURNING id,scheduled_for,status`, [userId, scheduled]);
     await client.query(`UPDATE users SET deletion_requested_at=now(),updated_at=now() WHERE id=$1`, [userId]);
-    await client.query(`UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()) WHERE user_id=$1`, [userId]);
+    await client.query(
+      `UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()),last_seen_at=now()
+        WHERE user_id=$1 AND id<>$2`,
+      [userId, currentSessionId],
+    );
     await client.query('COMMIT');
     return {jobId: job.rows[0].id, scheduledFor: job.rows[0].scheduled_for, status: job.rows[0].status};
   } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
@@ -168,6 +172,9 @@ async function finalizeDeletion(jobId: string, userId: string) {
     // Delete data owned by the account. Shared messages authored by this user are removed
     // because the schema has no anonymous sender representation; other users' messages remain.
     await client.query(`DELETE FROM messages WHERE sender_id=$1`, [userId]);
+    // Remove the deleted account from every remaining direct/group conversation.
+    // This is needed even when the conversation itself belongs to other users.
+    await client.query(`DELETE FROM conversation_members WHERE user_id=$1`, [userId]);
     await client.query(`DELETE FROM groups WHERE created_by=$1`, [userId]);
     await client.query(`DELETE FROM contacts WHERE user_id=$1 OR contact_user_id=$1`, [userId]);
     await client.query(`DELETE FROM contact_requests WHERE requester_id=$1 OR recipient_id=$1`, [userId]);
@@ -231,6 +238,6 @@ export async function createReport(reporterId: string, input: {reportedUserId?:s
 }
 
 export async function getDeletionStatus(userId: string) {
-  const r = await pool.query(`SELECT id,scheduled_for,status,requested_at FROM account_deletion_jobs WHERE user_id=$1 ORDER BY requested_at DESC LIMIT 1`, [userId]);
+  const r = await pool.query(`SELECT id,scheduled_for,status,requested_at FROM account_deletion_jobs WHERE user_id=$1 AND status IN ('pending','processing') ORDER BY requested_at DESC LIMIT 1`, [userId]);
   return r.rows[0] ? {jobId:r.rows[0].id,scheduledFor:r.rows[0].scheduled_for,status:r.rows[0].status,requestedAt:r.rows[0].requested_at} : null;
 }

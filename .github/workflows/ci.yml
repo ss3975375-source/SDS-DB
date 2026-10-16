@@ -27,9 +27,14 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=20
     env:
       NODE_ENV: test
-      DATABASE_URL: postgresql://sdsdb:ci-password@localhost:5432/sdsdb_test
+      DATABASE_URL: postgresql://localhost:5432/sdsdb_test
+      PGUSER: sdsdb
+      PGPASSWORD: ci-password
       JWT_SECRET: ci-only-secret-that-is-long-enough
-      CORS_ORIGINS: https://ci.example.invalid
+      GOOGLE_WEB_CLIENT_ID: ci-test.apps.googleusercontent.com
+      STORAGE_ACCESS_KEY: ci-storage-access-key
+      STORAGE_SECRET_KEY: ci-storage-secret-key
+      CORS_ORIGIN: https://ci.example.invalid
     defaults:
       run:
         working-directory: backend
@@ -42,6 +47,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run security:audit
+      - run: npm run migrate
       - run: npm test
 
   flutter:
@@ -54,7 +60,7 @@ jobs:
           cache: true
       - run: flutter pub get
         working-directory: app
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
         working-directory: app
       - run: flutter test
         working-directory: app

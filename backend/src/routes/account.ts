@@ -24,7 +24,7 @@ export async function registerAccountRoutes(app: FastifyInstance) {
   app.post('/api/v1/account/deletion', {preHandler: requireAuth}, async (request, reply) => {
     const body = z.object({confirm:z.literal(true)}).safeParse(request.body);
     if (!body.success) return reply.code(400).send({error:'deletion_confirmation_required'});
-    try { return reply.code(202).send(await requestAccountDeletion(request.auth.userId)); }
+    try { return reply.code(202).send(await requestAccountDeletion(request.auth.userId, request.auth.sessionId)); }
     catch (e) { if (e instanceof Error && e.message === 'ACCOUNT_ALREADY_DELETED') return reply.code(410).send({error:'account_deleted'}); request.log.error({err:e},'deletion request failed'); return reply.code(500).send({error:'Unable to request account deletion'}); }
   });
 

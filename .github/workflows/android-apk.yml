@@ -2,6 +2,11 @@ name: Build APK
 
 on:
   workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Public HTTPS base URL of the deployed SDS-DB API (without a trailing slash)"
+        required: true
+        type: string
 
 jobs:
   build:
@@ -21,17 +26,32 @@ jobs:
         working-directory: app
         run: flutter pub get
 
-      - name: Validate Google Sign-In configuration
-        env:
-          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+      - name: Analyze and test
+        working-directory: app
         run: |
-          test -n "$GOOGLE_WEB_CLIENT_ID"
+          flutter analyze --no-fatal-infos
+          flutter test
 
-      - name: Build APK
+      - name: Validate configuration and build APK
         working-directory: app
         env:
+          API_BASE_URL: ${{ inputs.api_base_url }}
           GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
-        run: flutter build apk --debug --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
+        run: |
+          test -n "$GOOGLE_WEB_CLIENT_ID" || { echo "Set the GOOGLE_WEB_CLIENT_ID repository variable first."; exit 1; }
+          test -n "$API_BASE_URL" || { echo "Enter the deployed API URL."; exit 1; }
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "API_BASE_URL must use HTTPS."; exit 1 ;;
+          esac
+          case "$API_BASE_URL" in
+            *localhost*|*127.0.0.1*|*10.0.2.2*)
+              echo "API_BASE_URL must point to a publicly reachable production or test server."
+              exit 1
+              ;;
+          esac
+          API_BASE_URL="${API_BASE_URL%/}"
+          flutter build apk --debug --dart-define=API_BASE_URL="$API_BASE_URL" --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

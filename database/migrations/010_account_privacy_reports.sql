@@ -51,6 +51,11 @@ CREATE TABLE IF NOT EXISTS reports (
   )
 );
 
+-- Earlier migration 001 creates a legacy reports table, so add columns explicitly.
+ALTER TABLE reports
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open',
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
 CREATE INDEX IF NOT EXISTS idx_reports_reporter
   ON reports(reporter_id, created_at DESC);
 

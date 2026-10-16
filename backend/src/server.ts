@@ -16,6 +16,7 @@ import { messageSyncRoutes } from './routes/messageSync.js';
 import { pool } from './db/pool.js';
 import { registerSessionRoutes } from './routes/sessions.js';
 import { messageLifecycleRoutes } from './routes/messageLifecycle.js';
+import { conversationRoutes } from './routes/conversations.js';
 import { redactSensitive } from './utils/security.js';
 
 export async function buildApp() {
@@ -51,6 +52,7 @@ export async function buildApp() {
   app.register(quotaRoutes, { prefix: '/api/v1/files' });
   app.register(fileRoutes, { prefix: '/api/v1/files' });
   app.register(groupRoutes, { prefix: '/api/v1/groups' });
+  app.register(conversationRoutes, { prefix: '/api/v1/conversations' });
   app.register(messageSyncRoutes, { prefix: '/api/v1/messages' });
   app.register(messageRoutes, { prefix: '/api/v1/messages' });
   app.register(messageLifecycleRoutes, { prefix: '/api/v1/message-lifecycle' });
@@ -58,6 +60,9 @@ export async function buildApp() {
     const message = error instanceof Error ? error.message : '';
     const errorName = error instanceof Error ? error.name : '';
     const authFailure = message === 'UNAUTHENTICATED' || ['JWTExpired','JWSInvalid','JWTClaimValidationFailed'].includes(errorName);
+    if (message === 'ACCOUNT_DELETION_PENDING') {
+      return reply.code(403).send({ error: 'Account deletion is pending; only status and cancellation are allowed.' });
+    }
     if (authFailure) {
       request.log.warn({ event: 'authn_failed', requestId: request.id }, 'authentication failed');
       return reply.code(401).send({ error: 'Authentication required' });

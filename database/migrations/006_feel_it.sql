@@ -1,4 +1,8 @@
 -- Feel It: ephemeral status/story-style content.
+-- Canonicalize the legacy Feel It columns created by migration 001.
+ALTER TABLE feel_it_posts RENAME COLUMN user_id TO author_id;
+ALTER TABLE feel_it_posts RENAME COLUMN text_body TO text_content;
+
 CREATE TABLE IF NOT EXISTS feel_it_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

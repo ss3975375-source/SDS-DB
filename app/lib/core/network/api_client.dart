@@ -81,7 +81,10 @@ class ApiClient {
 
   Map<String, dynamic> _decode(http.Response response) {
     Map<String, dynamic> data = {};
-    if (response.body.isNotEmpty) data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.body.isNotEmpty) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) data = decoded;
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw AppException((data['error'] as String?) ?? 'Request failed', code: '${response.statusCode}');
     }

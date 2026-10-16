@@ -1,72 +1,26 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../../core/network/api_client.dart';
 import 'session_models.dart';
 
 class SessionRepository {
-  final String baseUrl;
-  final http.Client client;
-  final Future<String?> Function() accessToken;
-
-  SessionRepository({
-    required this.baseUrl,
-    required this.client,
-    required this.accessToken,
-  });
+  SessionRepository(this.api);
+  final ApiClient api;
 
   Future<List<DeviceSession>> list() async {
-    final token = await accessToken();
-    final response = await client.get(
-      Uri.parse('$baseUrl/api/v1/sessions'),
-      headers: {
-        'Accept': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Unable to load active sessions');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = await api.get('/api/v1/sessions', authenticated: true);
     return (data['items'] as List<dynamic>? ?? const [])
         .map((e) => DeviceSession.fromJson(e as Map<String, dynamic>))
-        .toList();
+        .toList(growable: false);
   }
 
   Future<void> revoke(String sessionId) async {
-    final token = await accessToken();
-    final response = await client.post(
-      Uri.parse('$baseUrl/api/v1/sessions/$sessionId/revoke'),
-      headers: {
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Unable to revoke session');
-    }
+    await api.post('/api/v1/sessions/$sessionId/revoke', authenticated: true);
   }
 
   Future<void> revokeOthers() async {
-    final token = await accessToken();
-    final response = await client.post(
-      Uri.parse('$baseUrl/api/v1/sessions/revoke-others'),
-      headers: {
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Unable to revoke other sessions');
-    }
+    await api.post('/api/v1/sessions/revoke-others', authenticated: true);
   }
 
   Future<void> revokeAll() async {
-    final token = await accessToken();
-    final response = await client.post(
-      Uri.parse('$baseUrl/api/v1/sessions/revoke-all'),
-      headers: {
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode >= 400) {
-      throw Exception('Unable to revoke sessions');
-    }
+    await api.post('/api/v1/sessions/revoke-all', authenticated: true);
   }
 }
