@@ -1,18 +1,19 @@
 -- Feel It: ephemeral status/story-style content.
 -- Repair legacy columns created by migration 001 before defining canonical indexes.
-DO $
+DO LANGUAGE plpgsql '
 BEGIN
-  IF to_regclass('public.feel_it_posts') IS NOT NULL THEN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='feel_it_posts' AND column_name='user_id')
-       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='feel_it_posts' AND column_name='author_id') THEN
+  IF to_regclass(''public.feel_it_posts'') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=''public'' AND table_name=''feel_it_posts'' AND column_name=''user_id'')
+       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=''public'' AND table_name=''feel_it_posts'' AND column_name=''author_id'') THEN
       ALTER TABLE feel_it_posts RENAME COLUMN user_id TO author_id;
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='feel_it_posts' AND column_name='text_body')
-       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='feel_it_posts' AND column_name='text_content') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=''public'' AND table_name=''feel_it_posts'' AND column_name=''text_body'')
+       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=''public'' AND table_name=''feel_it_posts'' AND column_name=''text_content'') THEN
       ALTER TABLE feel_it_posts RENAME COLUMN text_body TO text_content;
     END IF;
   END IF;
-END $sdsrepair$;
+END
+';
 
 CREATE TABLE IF NOT EXISTS feel_it_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
