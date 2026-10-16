@@ -38,7 +38,7 @@ jobs:
           test -n "$ANDROID_KEYSTORE_B64"
           test -n "$ANDROID_KEY_PROPERTIES"
           test -n "$GOOGLE_SERVICES_JSON"
-          printf '%s' "$ANDROID_KEY_PROPERTIES" > app/android/key.properties
+          printf '%s\n' "$ANDROID_KEY_PROPERTIES" | sed 's|^storeFile=.*|storeFile=../upload-keystore.jks|' > app/android/key.properties
           printf '%s' "$GOOGLE_SERVICES_JSON" > app/android/app/google-services.json
           printf '%s' "$ANDROID_KEYSTORE_B64" | base64 --decode > app/android/upload-keystore.jks
       - name: Validate release configuration
