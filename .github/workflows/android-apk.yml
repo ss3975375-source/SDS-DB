@@ -26,6 +26,12 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Analyze and test
+        working-directory: app
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+
       - name: Validate configuration and build APK
         working-directory: app
         env:
